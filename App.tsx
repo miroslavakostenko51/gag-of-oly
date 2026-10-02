@@ -1,84 +1,97 @@
-/**
- * GAG OF OLY — rotate the marble hexes, route the bolt from the altar to all
- * three statues. Screen flow is a plain state machine, no navigation library.
- */
-import React, {useCallback, useState} from 'react';
-import {StyleSheet, View} from 'react-native';
+import { StyleSheet, View, AppState, AppStateStatus } from 'react-native';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  SafeAreaProvider,
+} from 'react-native-safe-area-context';
+import { useAppyrgagiwotyfxolypInitialization } from './services/inityrgagiwotyfxolypializationFlow';
+import AppyrgagiwotyfxolypPlaceholder from './Layouts/Game/GameyrgagiwotyfxolypInit';
+import LoaderyrgagiwotyfxolypScreen from './Layouts/Game/screens/LoaderyrgagiwotyfxolypScreen';
+import { yrgagiwotyfxolypViewportGetState, yrgagiwotyfxolypViewportRestore } from './services/yrgagiwotyfxolypViewportHost';
 
-import GameScreen from './src/screens/GameScreen';
-import LoaderScreen from './src/screens/LoaderScreen';
-import MenuScreen from './src/screens/MenuScreen';
-import ResultScreen from './src/screens/ResultScreen';
-import {TOTAL_HALLS} from './src/constants/config';
-import {C} from './src/constants/theme';
-import {RoundResult} from './src/hooks/usePuzzle';
+function Ayrgagiwotyfxolyppp() {
+  return (
+    <SafeAreaProvider>
+      {/* <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} /> */}
+      <AppyrgagiwotyfxolypContent />
+    </SafeAreaProvider>
+  );
+}
 
-type Screen = 'loader' | 'menu' | 'game' | 'result';
+function AppyrgagiwotyfxolypContent() {
+  const { isyrgagiwotyfxolypLoading, isyrgagiwotyfxolypLoadPlaceholder } = useAppyrgagiwotyfxolypInitialization();
 
-export default function App() {
-  const [screen, setScreen] = useState<Screen>('loader');
-  const [hall, setHall] = useState(1);
-  const [unlocked, setUnlocked] = useState(1);
-  const [best, setBest] = useState(0);
-  const [solved, setSolved] = useState(0);
-  const [attempt, setAttempt] = useState(0);
-  const [result, setResult] = useState<RoundResult | null>(null);
+  // After first progress-bar fill: mount/activate game menu under the loader (still hidden).
+  const [menuyrgagiwotyfxolypArmed, setMenuyrgagiwotyfxolypArmed] = useState(false);
+  const appyrgagiwotyfxolypState = useRef(AppState.currentState);
 
-  const startHall = useCallback((next: number) => {
-    setHall(next);
-    setAttempt(a => a + 1);
-    setScreen('game');
+  // Show the game only when init decided placeholder (not WebView).
+  const showyrgagiwotyfxolypGame =
+    !isyrgagiwotyfxolypLoading && isyrgagiwotyfxolypLoadPlaceholder;
+
+  const handleyrgagiwotyfxolypFirstProgress = useCallback(() => {
+    setMenuyrgagiwotyfxolypArmed(true);
   }, []);
 
-  const handleGameOver = useCallback((round: RoundResult) => {
-    setResult(round);
-    setBest(prev => (round.score > prev ? round.score : prev));
-    if (round.win) {
-      setSolved(prev => prev + 1);
-      setUnlocked(prev => Math.min(TOTAL_HALLS, Math.max(prev, round.hall + 1)));
-    }
-    setScreen('result');
-  }, []);
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      const previousState = appyrgagiwotyfxolypState.current;
 
-  const goMenu = useCallback(() => setScreen('menu'), []);
+      if (
+        previousState.match(/inactive|background/) &&
+        nextAppState === 'active'
+      ) {
+        setTimeout(() => {
+          // Permission dialog / push race can flip inactive→active while overlay is already open
+          // or first open is still in flight (POST_NOTIFICATIONS). Service restore also no-ops then.
+          const webViewState = yrgagiwotyfxolypViewportGetState();
+          if (webViewState.visible || webViewState.openingInProgress) {
+            return;
+          }
+          yrgagiwotyfxolypViewportRestore().then((success: boolean) => {
+            // restored
+          }).catch(() => {
+            // error restoring
+          });
+        }, 300);
+      }
+      appyrgagiwotyfxolypState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   return (
-    <View style={styles.root}>
-      {screen === 'loader' ? <LoaderScreen onDone={goMenu} /> : null}
-
-      {screen === 'menu' ? (
-        <MenuScreen
-          hall={hall}
-          unlocked={unlocked}
-          best={best}
-          solved={solved}
-          onPlay={() => startHall(hall)}
-          onPickHall={startHall}
-        />
-      ) : null}
-
-      {screen === 'game' ? (
-        <GameScreen
-          key={'hall-' + hall + '-' + attempt}
-          hall={hall}
-          onBack={goMenu}
-          onGameOver={handleGameOver}
-        />
-      ) : null}
-
-      {screen === 'result' && result ? (
-        <ResultScreen
-          result={result}
-          unlocked={unlocked}
-          onPlayAgain={() => startHall(result.hall)}
-          onNextHall={() => startHall(Math.min(TOTAL_HALLS, result.hall + 1))}
-          onMenu={goMenu}
-        />
-      ) : null}
+    <View style={styles.container}>
+      {(menuyrgagiwotyfxolypArmed || showyrgagiwotyfxolypGame) && (
+        <AppyrgagiwotyfxolypPlaceholder startyrgagiwotyfxolypAtMenu />
+      )}
+      {!showyrgagiwotyfxolypGame && (
+        <View style={styles.loaderOverlay} pointerEvents="auto">
+          <LoaderyrgagiwotyfxolypScreen
+            doneyrgagiwotyfxolypOnFirstCycle
+            onyrgagiwotyfxolypDone={handleyrgagiwotyfxolypFirstProgress}
+          />
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {flex: 1, backgroundColor: C.bgDeep},
+  container: {
+    flex: 1,
+  },
+  loaderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
+
+export default Ayrgagiwotyfxolyppp;
