@@ -1,0 +1,44 @@
+{
+  "assets": [
+    {
+      "name": "icon_1024",
+      "type": "icon",
+      "prompt": "App icon, one single glossy 3D white marble hexagon tile with a thick gold rim and one bright cyan lightning bolt glowing inside it, centered, dark navy radial gradient background, crisp, high contrast, no text, no scene, no other objects"
+    },
+    {
+      "name": "bg_loader",
+      "type": "bg",
+      "prompt": "Vertical 9:16 mobile game loader background, near-black storm sky above dark clouds, faint cyan lightning far away, heavy vignette, cold and moody, cinematic, no text, no UI elements"
+    },
+    {
+      "name": "bg_menu",
+      "type": "bg",
+      "prompt": "Vertical 9:16 mobile game menu background, white marble sky temple with tall columns above golden sunlit clouds, warm gold light, vibrant 3D render, high contrast, no text, no UI elements"
+    },
+    {
+      "name": "bg_game",
+      "type": "bg",
+      "prompt": "Vertical 9:16 mobile game background, soft blurred dark navy marble temple hall interior, very low contrast for UI overlay, subtle cyan glow, no text, no UI elements"
+    },
+    {
+      "name": "sprite_zeus_statue",
+      "type": "sprite",
+      "prompt": "One single white marble greek god statue with gold accents, centered icon, glossy 3D render, isolated on plain white, no other objects"
+    },
+    {
+      "name": "sprite_orb",
+      "type": "sprite",
+      "prompt": "One single glowing cyan electric energy sphere, centered icon, glossy 3D render, isolated on plain white, no other objects"
+    },
+    {
+      "name": "sprite_hex_marble",
+      "type": "sprite",
+      "prompt": "One single white marble hexagon tile with a gold rim, centered icon, glossy 3D render, isolated on plain white, no other objects"
+    },
+    {
+      "name": "sprite_bolt",
+      "type": "sprite",
+      "prompt": "One single gold and cyan lightning bolt, centered icon, glossy 3D render, isolated on plain white, no other objects"
+    }
+  ]
+}
