@@ -3,6 +3,9 @@
  * hostFragment is its own mix and must not contain the project fragment (or the reverse):
  * the next global fragment replace would otherwise rewrite the activity package back.
  * applicationId, taskAffinity, and the JS component name ({projectFragment}abpp) stay put.
+ *
+ * Keep hostFragment only when it is still bound to this app (jiraIssue + packageName).
+ * Cloned templates that reuse the same meta.hostFragment otherwise share one Class Name.
  */
 const fs = require("node:fs/promises");
 const path = require("node:path");
@@ -22,8 +25,17 @@ function isUsableHost(host, projectFragment) {
   return /^[a-z0-9]+$/i.test(String(host || "")) && !fragmentsOverlap(host, projectFragment);
 }
 
-function suggestHostFragment(rootPath, projectFragment) {
-  const base = folderSlugFromRoot(rootPath);
+/** Stable per-app key so clones don't keep another task's Class Name. */
+function hostBindingKey(meta) {
+  const issue = String(meta?.jiraIssue || "").trim();
+  const pkg = String(meta?.packageName || "").trim();
+  if (!issue && !pkg) return "";
+  return `${issue}|${pkg}`;
+}
+
+function suggestHostFragment(rootPath, projectFragment, meta) {
+  const issueDigits = String(meta?.jiraIssue || "").replace(/\D/g, "");
+  const base = `${folderSlugFromRoot(rootPath)}${issueDigits}`;
   for (let i = 0; i < 48; i++) {
     const host = mixFragment(base);
     if (!fragmentsOverlap(host, projectFragment)) return host;
@@ -76,7 +88,7 @@ function samePath(a, b) {
 
 /**
  * @param {string} rootPath
- * @param {object} meta mutated: meta.hostFragment
+ * @param {object} meta mutated: meta.hostFragment, meta.hostFragmentBoundTo
  * @param {string} projectFragment live project fragment (after fragment replace)
  */
 async function applyHostFragment(rootPath, meta, projectFragment) {
@@ -85,10 +97,13 @@ async function applyHostFragment(rootPath, meta, projectFragment) {
     return { ok: false, details: "fragment проекта не найден" };
   }
 
+  const binding = hostBindingKey(meta);
   const previous = String(meta.hostFragment || "").trim();
-  const kept = isUsableHost(previous, project);
+  const previousBound = String(meta.hostFragmentBoundTo || "").trim();
+  const boundOk = Boolean(binding) && previousBound === binding;
+  const kept = boundOk && isUsableHost(previous, project);
   const generated = !kept;
-  const host = kept ? previous : suggestHostFragment(rootPath, project);
+  const host = kept ? previous : suggestHostFragment(rootPath, project, meta);
   const targetPackage = `com.${host}abpp`;
 
   const gradlePath = path.join(rootPath, "android", "app", "build.gradle");
@@ -165,6 +180,9 @@ async function applyHostFragment(rootPath, meta, projectFragment) {
   }
 
   meta.hostFragment = host;
+  if (binding) meta.hostFragmentBoundTo = binding;
+  else delete meta.hostFragmentBoundTo;
+
   const nsBefore = (gradleRaw.match(NAMESPACE_RE) || [])[3] || "?";
   if (!generated && !dirMoves && gradleNext === gradleRaw && rewritten.every((item) => item.next === item.raw)) {
     return {
@@ -187,4 +205,5 @@ module.exports = {
   applyHostFragment,
   fragmentsOverlap,
   suggestHostFragment,
+  hostBindingKey,
 };

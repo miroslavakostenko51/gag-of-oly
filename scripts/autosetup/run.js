@@ -118,7 +118,8 @@ meta.json (Jira):
   → appName / packageName + keystore / google-services / *_source.zip
   → комментарии задачи: домен вида cipherijfjd.xyz → li{fragment}nk (Cloudflare Worker URL)
   → после game: штамп fragment в Layouts/Game (имена + код), иначе fragment/split там пустые
-  → после fragment: namespace и пакет Main* → com.{hostFragment}abpp (hostFragment пишется в meta.json)
+  → после fragment: namespace и пакет Main* → com.{hostFragment}abpp
+    (уникален на jiraIssue+packageName; иначе клоны шаблона делят один Class Name)
 
 Примеры:
   node scripts/autosetup/run.js --only keystore,game

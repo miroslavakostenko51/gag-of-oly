@@ -1,4 +1,4 @@
-package com.jsdkjehjwelysabpp
+package com.gagofnmoly3p607eabpp
 
 import android.content.Intent
 import android.os.Bundle
